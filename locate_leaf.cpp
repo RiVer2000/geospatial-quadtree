@@ -25,7 +25,7 @@ public:
     cv::Mat extractRegionContainingPoints(Point p1, Point p2, const cv::Mat &image);
 };
 
-int Quad::resolution = 32; // Default resolution limit
+int Quad::resolution = 16; // Default resolution limit
 
 Quad::Quad(Point topL, Point botR) : topLeft(topL), botRight(botR),
     topLeftTree(nullptr), topRightTree(nullptr),
@@ -112,7 +112,7 @@ void Quad::loadRegion(const cv::Mat &image) {
 }
 
 int main() {
-    cv::Mat image = cv::imread("pikachu.jpeg");
+    cv::Mat image = cv::imread("carina_nebula.png");
     if (image.empty()) {
         std::cerr << "Error: Unable to load image!" << std::endl;
         return -1;
@@ -120,17 +120,34 @@ int main() {
 
     Quad quadtree(Point(0, 0), Point(image.cols, image.rows));
     
-    Point start(1900, 400);
-    Point goal(400, 900);
+    Point start(600, 400);
+    Point goal(600, 410);
     
     quadtree.dynamicSubdivide(image, start);
     quadtree.dynamicSubdivide(image, goal);
     
     cv::Mat result = quadtree.extractRegionContainingPoints(start, goal, image);
+    
+    // Create a copy of the original image to draw on
+    cv::Mat imageCopy = image.clone();
+
+    // Draw the start point as a red circle
+    int radius = 10;
+    cv::Scalar startColor(0, 0, 255); // Red in BGR
+    cv::circle(imageCopy, cv::Point(start.x, start.y), radius, startColor, 2);
+
+    // Draw the goal point as a green circle
+    cv::Scalar goalColor(0, 255, 0); // Green in BGR
+    cv::circle(imageCopy, cv::Point(goal.x, goal.y), radius, goalColor, 2);
+
+    // Display both images simultaneously
     if (!result.empty()) {
         cv::imshow("Extracted Region", result);
-        cv::waitKey(0);
     }
+    cv::imshow("Marked Points", imageCopy);
+    
+    // Wait for a key press once - after showing all windows
+    cv::waitKey(0);
 
     return 0;
 }
