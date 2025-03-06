@@ -1,279 +1,114 @@
-// #include <iostream>
-// #include <vector>
-// #include <unordered_map>
-// #include <opencv2/opencv.hpp>
-
-// struct Point {
-//     int x, y;
-//     Point(int _x, int _y) : x(_x), y(_y) {}
-//     Point() : x(0), y(0) {}
-// };
-
-// struct Node {
-//     Point pos;
-//     int width, height;
-//     cv::Rect roi; // Instead of storing full image, store only ROI coordinates
-
-//     Node(Point _pos, int _width, int _height, cv::Rect _roi)
-//         : pos(_pos), width(_width), height(_height), roi(_roi) {}
-// };
-
-// class Quad {
-//     Point topLeft, botRight;
-//     Node* n;
-//     Quad *topLeftTree, *topRightTree, *botLeftTree, *botRightTree;
-//     bool isLoaded;
-//     static std::unordered_map<std::string, cv::Mat> cache; // Simple caching mechanism
-
-// public:
-//     Quad(Point topL, Point botR) {
-//         topLeft = topL;
-//         botRight = botR;
-//         n = nullptr;
-//         topLeftTree = nullptr;
-//         topRightTree = nullptr;
-//         botLeftTree = nullptr;
-//         botRightTree = nullptr;
-//         isLoaded = false;
-//     }
-
-//     void load(const cv::Mat& image);
-//     void subdivide(const cv::Mat& image);
-//     Quad* findSmallestCommonAncestor(Point p1, Point p2);
-//     bool inBoundary(Point p);
-//     Quad* getSmallestLeafContaining(Point p);
-//     cv::Mat extractRegion(Point p1, Point p2, const cv::Mat& image);
-// };
-
-// std::unordered_map<std::string, cv::Mat> Quad::cache;
-
-// void Quad::load(const cv::Mat& image) {
-//     if (isLoaded) return;
-    
-//     cv::Rect roi(topLeft.x, topLeft.y, botRight.x - topLeft.x, botRight.y - topLeft.y);
-//     std::string cacheKey = std::to_string(topLeft.x) + "_" + std::to_string(topLeft.y) + "_" + std::to_string(botRight.x) + "_" + std::to_string(botRight.y);
-    
-//     if (cache.find(cacheKey) == cache.end()) {
-//         cache[cacheKey] = image(roi).clone();
-//     }
-    
-//     n = new Node(topLeft, roi.width, roi.height, roi);
-//     isLoaded = true;
-// }
-
-// void Quad::subdivide(const cv::Mat& image) {
-//     if (botRight.x - topLeft.x <= 2 && botRight.y - topLeft.y <= 2)
-//         return;
-
-//     int midX = (topLeft.x + botRight.x) / 2;
-//     int midY = (topLeft.y + botRight.y) / 2;
-
-//     if (!topLeftTree) topLeftTree = new Quad(topLeft, Point(midX, midY));
-//     if (!topRightTree) topRightTree = new Quad(Point(midX, topLeft.y), Point(botRight.x, midY));
-//     if (!botLeftTree) botLeftTree = new Quad(Point(topLeft.x, midY), Point(midX, botRight.y));
-//     if (!botRightTree) botRightTree = new Quad(Point(midX, midY), botRight);
-
-//     topLeftTree->subdivide(image);
-//     topRightTree->subdivide(image);
-//     botLeftTree->subdivide(image);
-//     botRightTree->subdivide(image);
-// }
-
-// Quad* Quad::findSmallestCommonAncestor(Point p1, Point p2) {
-//     if (!inBoundary(p1) || !inBoundary(p2)) return nullptr;
-//     if (!topLeftTree) return this; // If we are at a leaf, return
-
-//     if (topLeftTree->inBoundary(p1) && topLeftTree->inBoundary(p2)) return topLeftTree->findSmallestCommonAncestor(p1, p2);
-//     if (topRightTree->inBoundary(p1) && topRightTree->inBoundary(p2)) return topRightTree->findSmallestCommonAncestor(p1, p2);
-//     if (botLeftTree->inBoundary(p1) && botLeftTree->inBoundary(p2)) return botLeftTree->findSmallestCommonAncestor(p1, p2);
-//     if (botRightTree->inBoundary(p1) && botRightTree->inBoundary(p2)) return botRightTree->findSmallestCommonAncestor(p1, p2);
-
-//     return this;
-// }
-
-// cv::Mat Quad::extractRegion(Point p1, Point p2, const cv::Mat& image) {
-//     Quad* ancestor = findSmallestCommonAncestor(p1, p2);
-//     if (!ancestor) return cv::Mat();
-
-//     if (!ancestor->isLoaded) {
-//         ancestor->load(image);
-//     }
-    
-//     std::string cacheKey = std::to_string(ancestor->topLeft.x) + "_" + std::to_string(ancestor->topLeft.y) + "_" + std::to_string(ancestor->botRight.x) + "_" + std::to_string(ancestor->botRight.y);
-//     return cache[cacheKey].clone();
-// }
-
-// bool Quad::inBoundary(Point p) {
-//     return (p.x >= topLeft.x && p.x <= botRight.x
-//             && p.y >= topLeft.y && p.y <= botRight.y);
-// }
-
-// int main() {
-//     cv::Mat image = cv::imread("pikachu.jpeg");
-//     if (image.empty()) {
-//         std::cerr << "Error: Unable to load image!" << std::endl;
-//         return -1;
-//     }
-
-//     Quad quadtree(Point(0, 0), Point(image.cols, image.rows));
-//     quadtree.subdivide(image);
-
-//     Point p1(1800, 1080);
-//     Point p2(1800, 114);
-//     cv::Mat region = quadtree.extractRegion(p1, p2, image);
-
-//     if (!region.empty()) {
-//         cv::imshow("Extracted Region", region);
-//         cv::waitKey(0);
-//     } else {
-//         std::cout << "No region found!" << std::endl;
-//     }
-
-//     return 0;
-// }
-
 #include <iostream>
 #include <vector>
-#include <unordered_map>
-#include <list>
 #include <opencv2/opencv.hpp>
 
 struct Point {
     int x, y;
     Point(int _x, int _y) : x(_x), y(_y) {}
-    Point() : x(0), y(0) {}
-};
-
-struct Node {
-    Point pos;
-    int width, height;
-    cv::Rect roi; // Store only ROI coordinates
-
-    Node(Point _pos, int _width, int _height, cv::Rect _roi)
-        : pos(_pos), width(_width), height(_height), roi(_roi) {}
-};
-
-class LRUCache {
-    int capacity;
-    std::list<std::string> order;
-    std::unordered_map<std::string, std::pair<cv::Mat, std::list<std::string>::iterator>> cache;
-
-public:
-    LRUCache(int cap) : capacity(cap) {}
-
-    cv::Mat get(const std::string& key) {
-        if (cache.find(key) == cache.end()) return cv::Mat();
-        order.splice(order.begin(), order, cache[key].second);
-        return cache[key].first;
-    }
-
-    void put(const std::string& key, const cv::Mat& value) {
-        if (cache.find(key) != cache.end()) {
-            order.splice(order.begin(), order, cache[key].second);
-            cache[key].first = value;
-            return;
-        }
-
-        if (cache.size() >= capacity) {
-            std::string last = order.back();
-            order.pop_back();
-            cache.erase(last);
-        }
-
-        order.push_front(key);
-        cache[key] = {value, order.begin()};
-    }
 };
 
 class Quad {
-    Point topLeft, botRight;
-    Node* n;
-    Quad *topLeftTree, *topRightTree, *botLeftTree, *botRightTree;
-    bool isLoaded;
-    static LRUCache cache;
-
 public:
-    Quad(Point topL, Point botR) {
-        topLeft = topL;
-        botRight = botR;
-        n = nullptr;
-        topLeftTree = nullptr;
-        topRightTree = nullptr;
-        botLeftTree = nullptr;
-        botRightTree = nullptr;
-        isLoaded = false;
-    }
+    Point topLeft, botRight;
+    Quad *topLeftTree, *topRightTree, *botLeftTree, *botRightTree;
+    cv::Mat region;
+    bool isLeaf;
+    static int resolution;
 
-    void load(const cv::Mat& image);
-    void subdivide(const cv::Mat& image);
-    Quad* findSmallestCommonAncestor(Point p1, Point p2);
+    Quad(Point topL, Point botR);
+    void subdivide();
     bool inBoundary(Point p);
-    cv::Mat extractRegion(Point p1, Point p2, const cv::Mat& image);
+    Quad* getLeafContaining(Point p);
+    void loadRegion(const cv::Mat &image);
+    void dynamicSubdivide(const cv::Mat &image, Point queryPoint);
+    Quad* findSmallestCommonAncestor(Point p1, Point p2);
+    cv::Mat extractRegionContainingPoints(Point p1, Point p2, const cv::Mat &image);
 };
 
-LRUCache Quad::cache(10); // LRU cache with 10 regions max
+int Quad::resolution = 32; // Default resolution limit
 
-void Quad::load(const cv::Mat& image) {
-    if (isLoaded) return;
-    
-    cv::Rect roi(topLeft.x, topLeft.y, botRight.x - topLeft.x, botRight.y - topLeft.y);
-    std::string cacheKey = std::to_string(topLeft.x) + "_" + std::to_string(topLeft.y) + "_" + std::to_string(botRight.x) + "_" + std::to_string(botRight.y);
-    
-    cv::Mat cachedRegion = cache.get(cacheKey);
-    if (cachedRegion.empty()) {
-        cv::Mat newRegion = image(roi).clone();
-        cache.put(cacheKey, newRegion);
+Quad::Quad(Point topL, Point botR) : topLeft(topL), botRight(botR),
+    topLeftTree(nullptr), topRightTree(nullptr),
+    botLeftTree(nullptr), botRightTree(nullptr),
+    isLeaf(true) {}
+
+void Quad::subdivide() {
+    if ((botRight.x - topLeft.x) <= resolution || (botRight.y - topLeft.y) <= resolution) {
+        return;
     }
     
-    n = new Node(topLeft, roi.width, roi.height, roi);
-    isLoaded = true;
-}
-
-void Quad::subdivide(const cv::Mat& image) {
-    if (botRight.x - topLeft.x <= 2 && botRight.y - topLeft.y <= 2)
-        return;
-
     int midX = (topLeft.x + botRight.x) / 2;
     int midY = (topLeft.y + botRight.y) / 2;
+    
+    topLeftTree = new Quad(topLeft, Point(midX, midY));
+    topRightTree = new Quad(Point(midX, topLeft.y), Point(botRight.x, midY));
+    botLeftTree = new Quad(Point(topLeft.x, midY), Point(midX, botRight.y));
+    botRightTree = new Quad(Point(midX, midY), botRight);
+    
+    isLeaf = false;
+}
 
-    if (!topLeftTree) topLeftTree = new Quad(topLeft, Point(midX, midY));
-    if (!topRightTree) topRightTree = new Quad(Point(midX, topLeft.y), Point(botRight.x, midY));
-    if (!botLeftTree) botLeftTree = new Quad(Point(topLeft.x, midY), Point(midX, botRight.y));
-    if (!botRightTree) botRightTree = new Quad(Point(midX, midY), botRight);
+void Quad::dynamicSubdivide(const cv::Mat &image, Point queryPoint) {
+    if (!inBoundary(queryPoint)) return;
+    
+    if (isLeaf) {
+        if ((botRight.x - topLeft.x) > resolution && (botRight.y - topLeft.y) > resolution) {
+            subdivide();
+            isLeaf = false;
+        } else {
+            loadRegion(image);
+            return;
+        }
+    }
+    
+    if (topLeftTree && topLeftTree->inBoundary(queryPoint)) topLeftTree->dynamicSubdivide(image, queryPoint);
+    else if (topRightTree && topRightTree->inBoundary(queryPoint)) topRightTree->dynamicSubdivide(image, queryPoint);
+    else if (botLeftTree && botLeftTree->inBoundary(queryPoint)) botLeftTree->dynamicSubdivide(image, queryPoint);
+    else if (botRightTree && botRightTree->inBoundary(queryPoint)) botRightTree->dynamicSubdivide(image, queryPoint);
+}
 
-    topLeftTree->subdivide(image);
-    topRightTree->subdivide(image);
-    botLeftTree->subdivide(image);
-    botRightTree->subdivide(image);
+bool Quad::inBoundary(Point p) {
+    return (p.x >= topLeft.x && p.x < botRight.x && p.y >= topLeft.y && p.y < botRight.y);
+}
+
+Quad* Quad::getLeafContaining(Point p) {
+    if (!inBoundary(p)) return nullptr;
+    if (isLeaf) return this;
+    
+    if (topLeftTree && topLeftTree->inBoundary(p)) return topLeftTree->getLeafContaining(p);
+    if (topRightTree && topRightTree->inBoundary(p)) return topRightTree->getLeafContaining(p);
+    if (botLeftTree && botLeftTree->inBoundary(p)) return botLeftTree->getLeafContaining(p);
+    if (botRightTree && botRightTree->inBoundary(p)) return botRightTree->getLeafContaining(p);
+    
+    return nullptr;
 }
 
 Quad* Quad::findSmallestCommonAncestor(Point p1, Point p2) {
     if (!inBoundary(p1) || !inBoundary(p2)) return nullptr;
-    if (!topLeftTree) return this;
-
-    if (topLeftTree->inBoundary(p1) && topLeftTree->inBoundary(p2)) return topLeftTree->findSmallestCommonAncestor(p1, p2);
-    if (topRightTree->inBoundary(p1) && topRightTree->inBoundary(p2)) return topRightTree->findSmallestCommonAncestor(p1, p2);
-    if (botLeftTree->inBoundary(p1) && botLeftTree->inBoundary(p2)) return botLeftTree->findSmallestCommonAncestor(p1, p2);
-    if (botRightTree->inBoundary(p1) && botRightTree->inBoundary(p2)) return botRightTree->findSmallestCommonAncestor(p1, p2);
-
-    return this;
+    if (isLeaf) return this;
+    
+    Quad* child = nullptr;
+    if (topLeftTree && topLeftTree->inBoundary(p1) && topLeftTree->inBoundary(p2)) child = topLeftTree;
+    else if (topRightTree && topRightTree->inBoundary(p1) && topRightTree->inBoundary(p2)) child = topRightTree;
+    else if (botLeftTree && botLeftTree->inBoundary(p1) && botLeftTree->inBoundary(p2)) child = botLeftTree;
+    else if (botRightTree && botRightTree->inBoundary(p1) && botRightTree->inBoundary(p2)) child = botRightTree;
+    
+    return child ? child->findSmallestCommonAncestor(p1, p2) : this;
 }
 
-cv::Mat Quad::extractRegion(Point p1, Point p2, const cv::Mat& image) {
+cv::Mat Quad::extractRegionContainingPoints(Point p1, Point p2, const cv::Mat &image) {
     Quad* ancestor = findSmallestCommonAncestor(p1, p2);
     if (!ancestor) return cv::Mat();
-
-    if (!ancestor->isLoaded) {
-        ancestor->load(image);
-    }
     
-    std::string cacheKey = std::to_string(ancestor->topLeft.x) + "_" + std::to_string(ancestor->topLeft.y) + "_" + std::to_string(ancestor->botRight.x) + "_" + std::to_string(ancestor->botRight.y);
-    return cache.get(cacheKey);
+    ancestor->loadRegion(image);
+    return ancestor->region;
 }
 
-bool Quad::inBoundary(Point p) {
-    return (p.x >= topLeft.x && p.x <= botRight.x
-            && p.y >= topLeft.y && p.y <= botRight.y);
+void Quad::loadRegion(const cv::Mat &image) {
+    if (region.empty()) {
+        cv::Rect roi(topLeft.x, topLeft.y, botRight.x - topLeft.x, botRight.y - topLeft.y);
+        region = image(roi).clone();
+    }
 }
 
 int main() {
@@ -284,21 +119,18 @@ int main() {
     }
 
     Quad quadtree(Point(0, 0), Point(image.cols, image.rows));
-    quadtree.subdivide(image);
-
-    Point p1(1800, 100);
-    Point p2(1800, 114);
-    cv::Mat region = quadtree.extractRegion(p1, p2, image);
-
-    if (!region.empty()) {
-        cv::imshow("Extracted Region", region);
+    
+    Point start(1900, 400);
+    Point goal(400, 900);
+    
+    quadtree.dynamicSubdivide(image, start);
+    quadtree.dynamicSubdivide(image, goal);
+    
+    cv::Mat result = quadtree.extractRegionContainingPoints(start, goal, image);
+    if (!result.empty()) {
+        cv::imshow("Extracted Region", result);
         cv::waitKey(0);
-    } else {
-        std::cout << "No region found!" << std::endl;
     }
-
-    // Save the region to disk to a folder extracted_map 
-    cv::imwrite("extracted_map/region.png", region);
 
     return 0;
 }
