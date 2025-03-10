@@ -25,7 +25,7 @@ public:
     cv::Mat extractRegionContainingPoints(Point p1, Point p2, const cv::Mat &image);
 };
 
-int Quad::resolution = 32; // Default resolution limit
+int Quad::resolution = 16; // Default resolution limit
 
 Quad::Quad(Point topL, Point botR) : topLeft(topL), botRight(botR),
     topLeftTree(nullptr), topRightTree(nullptr),
@@ -112,7 +112,7 @@ void Quad::loadRegion(const cv::Mat &image) {
 }
 
 int main() {
-    cv::Mat image = cv::imread("pikachu.jpeg");
+    cv::Mat image = cv::imread("carina_nebula.png");
     if (image.empty()) {
         std::cerr << "Error: Unable to load image!" << std::endl;
         return -1;
@@ -120,8 +120,8 @@ int main() {
 
     Quad quadtree(Point(0, 0), Point(image.cols, image.rows));
     
-    Point start(1900, 400);
-    Point goal(400, 900);
+    Point start(400, 400);
+    Point goal(700, 450);
     
     quadtree.dynamicSubdivide(image, start);
     quadtree.dynamicSubdivide(image, goal);
@@ -130,6 +130,10 @@ int main() {
     if (!result.empty()) {
         cv::imshow("Extracted Region", result);
         cv::waitKey(0);
+    }
+    if (!result.empty()) {
+        // save the extracted region to the folder extracted_map
+        cv::imwrite("extracted_map/extracted_region.png", result);
     }
 
     return 0;
