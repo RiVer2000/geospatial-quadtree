@@ -160,7 +160,7 @@ int main() {
                 std::cout << "Displaying region for leaf node containing waypoint (" << currentWaypoint.x << ", " << currentWaypoint.y << ")" << std::endl;
                 cv::imshow("Current Leaf Region", leaf->region);
                 // Wait 500ms between waypoints to simulate movement along the path
-                // cv::waitKey(1000);
+                cv::waitKey(1000);
             }
         }
     }

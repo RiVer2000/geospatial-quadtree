@@ -121,7 +121,7 @@ int main() {
     Quad quadtree(Point(0, 0), Point(image.cols, image.rows));
     
     Point start(960, 540);
-    Point goal(950, 530);
+    Point goal(967, 580);
     
     quadtree.dynamicSubdivide(image, start);
     quadtree.dynamicSubdivide(image, goal);
